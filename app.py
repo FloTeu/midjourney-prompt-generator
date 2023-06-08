@@ -62,7 +62,7 @@ def main():
         midjourney_images = session_state.crawling_data.midjourney_images
         selected_prompts = st.sidebar.multiselect("Select Designs for prompt generation:", [i+1 for i in range(len(midjourney_images))], on_change=display_midjourney_images, args=(session_state.crawling_data.midjourney_images,), key='selected_prompts')
         st.sidebar.text_input("Prompt Gen Input", key="prompt_gen_input")
-        if st.sidebar.button("Prompt Generation", key="button_prompt_generation"):
+        if st.sidebar.button("Prompt Generation", on_click=display_midjourney_images, args=(session_state.crawling_data.midjourney_images,), key="button_prompt_generation"):
             temperature = 0.7
             llm = ChatOpenAI(temperature=temperature, model_name="gpt-3.5-turbo")
             midjourney_prompt_gen = MidjourneyPromptGenerator(llm)
