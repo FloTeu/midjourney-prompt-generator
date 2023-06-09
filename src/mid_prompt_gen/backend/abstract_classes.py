@@ -88,8 +88,7 @@ class AbstractTextToImagePromptGenerator(AbstractFewShotGenerator):
         human_template = """
                             I want you to act as a professional image ai user. 
                             Write a single concise english prompt for the text delimited by ```. 
-                            The output prompt should focus on visual descriptions. 
-                            Take inspiration from the formating from the example prompts, dont copy them, but use the same format.
+                            Use the same patterns from the example prompts.
                             Your output should only contain the single prompt without further details.
                             ```{text}```
                          """

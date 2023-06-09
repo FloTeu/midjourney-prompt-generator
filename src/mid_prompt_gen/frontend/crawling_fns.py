@@ -112,6 +112,7 @@ def extract_midjourney_images(driver: WebDriver) -> List[MidjourneyImage]:
 def crawl_midjourney():
     session_state: SessionState = st.session_state["session_state"]
     driver = session_state.browser.driver
+    time.sleep(1)
     midjourney_community_feed(driver)
     time.sleep(1)
     midjourney_search_prompts(session_state.crawling_request.search_term, driver)

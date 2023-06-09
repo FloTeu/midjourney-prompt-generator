@@ -44,6 +44,7 @@ def display_midjourney_images(midjourney_images: List[MidjourneyImage]):
 
 def main():
 
+    st.header("Midjourney Few Shot Prompt Generator")
     st.sidebar.subheader("1. Midjourney Login")
     st.sidebar.info("*prompt search is only available for authenticated midjourney users")
     st.sidebar.text_input("Midjourney Email", value=os.environ.get("user_name", ""), key="mid_email")
