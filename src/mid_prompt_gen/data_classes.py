@@ -1,4 +1,4 @@
-from mid_prompt_gen.frontend.selenium_fns import SeleniumBrowser
+from mid_prompt_gen.selenium_fns import SeleniumBrowser
 from dataclasses import dataclass, field
 from typing import List, Optional
 

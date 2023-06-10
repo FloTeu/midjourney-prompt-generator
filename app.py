@@ -4,10 +4,10 @@ import math
 import requests
 from typing import List
 from io import BytesIO
-from mid_prompt_gen.frontend.session import update_request, SessionState
-from mid_prompt_gen.frontend.crawling_fns import crawl_midjourney, login_to_midjourney
-from mid_prompt_gen.frontend.data_classes import MidjourneyImage
-from mid_prompt_gen.backend.prompt_gen import MidjourneyPromptGenerator
+from mid_prompt_gen.session import update_request, SessionState
+from mid_prompt_gen.crawling_fns import crawl_midjourney, login_to_midjourney
+from mid_prompt_gen.data_classes import MidjourneyImage
+from llm_few_shot_gen.prompt_gen import MidjourneyPromptGenerator
 from langchain.chat_models.openai import ChatOpenAI
 
 os.environ["OPENAI_API_KEY"] = st.secrets["open_ai_api_key"]
