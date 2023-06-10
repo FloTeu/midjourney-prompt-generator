@@ -38,6 +38,10 @@ path = "src/mid_prompt_gen/__about__.py"
 dependencies = [
   "coverage[toml]>=6.5",
   "pytest",
+  "requests",
+  "selenium",
+  "undetected-chromedriver",
+  "seleniumbase"
 ]
 [tool.hatch.envs.default.scripts]
 test = "pytest {args:tests}"

@@ -7,7 +7,7 @@ from io import BytesIO
 from mid_prompt_gen.session import update_request, SessionState
 from mid_prompt_gen.crawling_fns import crawl_midjourney, login_to_midjourney
 from mid_prompt_gen.data_classes import MidjourneyImage
-from llm_few_shot_gen.prompt_gen import MidjourneyPromptGenerator
+from llm_few_shot_gen.prompt.midjourney import MidjourneyPromptGenerator
 from langchain.chat_models.openai import ChatOpenAI
 
 os.environ["OPENAI_API_KEY"] = st.secrets["open_ai_api_key"]
