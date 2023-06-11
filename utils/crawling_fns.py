@@ -6,8 +6,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.action_chains import ActionChains
 
-from mid_prompt_gen.session import set_session_state_if_not_exists
-from mid_prompt_gen.data_classes import SessionState, CrawlingData, MidjourneyImage
+from utils.session import set_session_state_if_not_exists
+from utils.data_classes import SessionState, CrawlingData, MidjourneyImage
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -60,7 +60,6 @@ def discord_login(driver: WebDriver):
 
 
 def authorize_midjourney(driver: WebDriver):
-    # TODO how to handle other countries?
     auth_button = driver.find_elements(By.XPATH, f"//button")[1]
     auth_button.click()
 
@@ -78,10 +77,13 @@ def midjourney_search_prompts(search_term: str, driver: WebDriver):
     search_button = parent_element.find_element(By.XPATH, './following-sibling::button')
     search_button.click()
 
-def extract_midjourney_images(driver: WebDriver) -> List[MidjourneyImage]:
-    midjourney_images: List[MidjourneyImage] = []
-    gridcells = driver.find_elements(By.CSS_SELECTOR, 'div[role="gridcell"]')
-    gridcells.reverse() # last html element is displayed on top of page
+def check_if_image_exists(images: List[MidjourneyImage], image_url: str) -> bool:
+    for img in images:
+        if img.image_url == image_url:
+            return True
+    return False
+
+def extend_midjourney_images_by_gridcells(midjourney_images, gridcells, driver):
     # Create an instance of ActionChains
     actions = ActionChains(driver)
 
@@ -102,9 +104,23 @@ def extract_midjourney_images(driver: WebDriver) -> List[MidjourneyImage]:
             actions.move_to_element(gridcell).perform()
             # extract prompt from text area
             prompt = driver.find_element(By.CSS_SELECTOR, "p._promptText_").text
-            midjourney_images.append(MidjourneyImage(image_url=image_url, prompt=prompt))
+            if not check_if_image_exists(midjourney_images, image_url):
+                midjourney_images.append(MidjourneyImage(image_url=image_url, prompt=prompt))
         except Exception as e:
             print(str(e))
+
+def extract_midjourney_images(driver: WebDriver) -> List[MidjourneyImage]:
+    midjourney_images: List[MidjourneyImage] = []
+    gridcells = driver.find_elements(By.CSS_SELECTOR, 'div[role="gridcell"]')
+    gridcells.reverse() # last html element is displayed on top of page
+
+    # extract all currently visible gridcells
+    extend_midjourney_images_by_gridcells(midjourney_images, gridcells, driver)
+    # Scroll down to make more gridcells visible
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    gridcells = driver.find_elements(By.CSS_SELECTOR, 'div[role="gridcell"]')
+    #gridcells.reverse() # last html element is displayed on top of page
+    extend_midjourney_images_by_gridcells(midjourney_images, gridcells, driver)
 
     return midjourney_images
 
@@ -114,7 +130,7 @@ def crawl_midjourney():
     driver = session_state.browser.driver
     time.sleep(1)
     midjourney_community_feed(driver)
-    time.sleep(1)
+    time.sleep(2)
     midjourney_search_prompts(session_state.crawling_request.search_term, driver)
     time.sleep(3)
     session_state.crawling_data = CrawlingData(midjourney_images=extract_midjourney_images(driver))

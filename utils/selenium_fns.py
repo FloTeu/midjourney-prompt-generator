@@ -47,6 +47,7 @@ def init_selenium_driver(headless=True, data_dir_path=None) -> WebDriver:
     options.add_argument("--disable-features=NetworkService")
     options.add_argument("--window-size=1920x1080")
     options.add_argument("--disable-features=VizDisplayCompositor")
+    options.add_argument("--lang=en");
     if data_dir_path:
         options.add_argument(f'--user-data-dir={data_dir_path}')
     if headless:

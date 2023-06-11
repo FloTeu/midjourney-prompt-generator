@@ -2,8 +2,9 @@ import os
 import streamlit as st
 
 from typing import List, Any
-from mid_prompt_gen.data_classes import SessionState, CrawlingRequest, CrawlingData, Status
-from mid_prompt_gen.selenium_fns import SeleniumBrowser
+from utils.data_classes import SessionState, CrawlingRequest, CrawlingData, Status
+from utils.selenium_fns import SeleniumBrowser
+
 
 def booleanize(s):
     return s.lower() in ['true', '1']
