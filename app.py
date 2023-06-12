@@ -16,6 +16,11 @@ os.environ["OPENAI_API_KEY"] = st.secrets["open_ai_api_key"]
 
 MAX_IMAGES_PER_ROW = 4
 
+st.set_page_config(
+    page_title="Midjourney Prompt Generator",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
 @st.cache_data
 def image_url2image_bytes_io(image_url: str) -> BytesIO:
@@ -55,7 +60,9 @@ def display_prompt_generation_tab(midjourney_images, selected_prompts, tab_promp
     # Few Shot learning
     prompts = [mid_img.prompt for i, mid_img in enumerate(midjourney_images) if (i + 1) in selected_prompts]
 
-    llm_output: ImagePromptOutputModel = generate_midjourney_prompts(prompts)
+    with tab_prompt_gen:
+        with st.spinner('Wait for prompt generation'):
+            llm_output: ImagePromptOutputModel = generate_midjourney_prompts(prompts)
 
     tab_prompt_gen.subheader("Generated Prompts")
     #if tab_prompt_gen.button("Regenerate Prompt"):
@@ -99,7 +106,20 @@ def generate_midjourney_prompts(prompts) -> ImagePromptOutputModel:
 
 def main():
 
-    st.header("Midjourney Few Shot Prompt Generator")
+    st.title("Midjourney Few Shot Prompt Generator")
+    st.caption('“If you can imagine it, you can generate it” - Runway Gen-2 commercial')
+
+    st.write("Streamlit application for a showcase of the [LLM Few Shot Generator Library](https://github.com/FloTeu/llm-few-shot-generator). \n"
+             "The app allows you to extract sample prompts from the Midjourney website. A subsample of these prompts can then be used to generate new prompts for ChatGPT using a [few-shot learning](https://www.promptingguide.ai/techniques/fewshot) approach.")
+    st.write("[Source code frontend](https://github.com/FloTeu/midjourney-prompt-generator)")
+    st.write("[Source code backend](https://github.com/FloTeu/llm-few-shot-generator)")
+
+    with st.expander("Example"):
+        st.write("""
+            Text Prompt Input: "Grandma" \n
+            Midjourney Prompt Generator output images:
+        """)
+        st.image("assets/grandmas.jpg")
 
     tab_crawling, tab_prompt_gen = st.tabs(["Crawling", "Prompt Generation"])
 
