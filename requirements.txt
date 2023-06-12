@@ -4,6 +4,7 @@ git+https://github.com/FloTeu/llm-few-shot-generator.git@main
 langchain==0.0.174
 streamlit==1.22.0
 requests
+pydantic
 
 # selenium
 selenium

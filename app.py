@@ -9,8 +9,8 @@ from utils.crawling_fns import crawl_midjourney, login_to_midjourney
 from utils.data_classes import MidjourneyImage
 from utils import extract_list_items
 from llm_few_shot_gen.prompt.midjourney import MidjourneyPromptGenerator
+from llm_few_shot_gen.prompt.data_classes import ImagePromptOutputModel
 from langchain.chat_models.openai import ChatOpenAI
-from langchain.prompts import SystemMessagePromptTemplate, HumanMessagePromptTemplate
 
 os.environ["OPENAI_API_KEY"] = st.secrets["open_ai_api_key"]
 
@@ -55,13 +55,15 @@ def display_prompt_generation_tab(midjourney_images, selected_prompts, tab_promp
     # Few Shot learning
     prompts = [mid_img.prompt for i, mid_img in enumerate(midjourney_images) if (i + 1) in selected_prompts]
 
-    llm_output = generate_midjourney_prompts(prompts)
+    llm_output: ImagePromptOutputModel = generate_midjourney_prompts(prompts)
 
     tab_prompt_gen.subheader("Generated Prompts")
     #if tab_prompt_gen.button("Regenerate Prompt"):
     #    llm_output = generate_midjourney_prompts(prompts)
-    print("llm_output", llm_output)
-    tab_prompt_gen.write(extract_list_items(llm_output))
+    #print("llm_output", llm_output)
+    tab_prompt_gen.write(llm_output.image_prompts)
+    tab_prompt_gen.subheader("Detected Art Styles")
+    tab_prompt_gen.write(llm_output.few_shot_art_styles)
 
     # Display selected images/prompts
     tab_prompt_gen.subheader("Selected Midjourney Images")
@@ -69,27 +71,27 @@ def display_prompt_generation_tab(midjourney_images, selected_prompts, tab_promp
                                   (i + 1) in selected_prompts]
     display_midjourney_images(selected_midjourney_images, tab_prompt_gen, make_collapsable=True)
 
-def generate_midjourney_prompts(prompts):
+def generate_midjourney_prompts(prompts) -> ImagePromptOutputModel:
     temperature = 0.7
     llm = ChatOpenAI(temperature=temperature, model_name="gpt-3.5-turbo")
     midjourney_prompt_gen = MidjourneyPromptGenerator(llm)
-
-    # Edit human call to action message in order to produce multiple prompts and not just one
-    human_template = """
-                        I want you to act as a professional image ai user.
-                        Write five concise english prompts enumerated starting with 1. without quotation marks for the text delimited by ```.
-                        Use the same patterns from the example prompts and if possible try to include the same art style.
-                        Your output should only contain the suggested prompts without further details.
-                        ```{text}```
-                     """
-    human_template = """
-                    Complete the following tasks in the right order:
-                    1. Try to extract the applied art style of the example prompts that the instructor provided you before.
-                    2. Write five concise english prompts with the content "{text}" enumerated starting with 1. without quotation marks. Your suggestions should include your found styles of step 1 and use the same patterns as the example prompts.
-                    
-                    Only output your result of the five prompts of the second step without any more details. Do not write anything about your results of step 1. 
-                 """
-    midjourney_prompt_gen.messages.human_message = HumanMessagePromptTemplate.from_template(human_template)
+    #
+    # # Edit human call to action message in order to produce multiple prompts and not just one
+    # human_template = """
+    #                     I want you to act as a professional image ai user.
+    #                     Write five concise english prompts enumerated starting with 1. without quotation marks for the text delimited by ```.
+    #                     Use the same patterns from the example prompts and if possible try to include the same art style.
+    #                     Your output should only contain the suggested prompts without further details.
+    #                     ```{text}```
+    #                  """
+    # human_template = """
+    #                 Complete the following tasks in the right order:
+    #                 1. Try to extract the applied art style of the example prompts that the instructor provided you before.
+    #                 2. Write five concise english prompts with the content "{text}" enumerated starting with 1. without quotation marks. Your suggestions should include your found styles of step 1 and use the same patterns as the example prompts.
+    #
+    #                 Only output your result of the five prompts of the second step without any more details. Do not write anything about your results of step 1.
+    #              """
+    # midjourney_prompt_gen.messages.human_message = HumanMessagePromptTemplate.from_template(human_template)
     midjourney_prompt_gen.set_few_shot_examples(prompts)
     llm_output = midjourney_prompt_gen.generate(text=st.session_state["prompt_gen_input"])
     return llm_output
