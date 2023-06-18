@@ -34,18 +34,17 @@ def check_if_image_exists(images: List[MidjourneyImage], image_url: str) -> bool
 
 def apply_filters(driver: WebDriver, preiod_wait_in_sec=1):
     # Open model selection filter field
-    driver.find_element(By.CLASS_NAME, 'css-dpjbap').click()
+    driver.find_element(By.CLASS_NAME, 'MuiFormControlLabel-root').click()
     time.sleep(preiod_wait_in_sec)
     # deactivate Stable Diffusion
-    driver.find_elements(By.CLASS_NAME, 'css-dpjbap')[1].click()
+    driver.find_elements(By.CLASS_NAME, 'MuiFormControlLabel-root')[1].click()
     time.sleep(preiod_wait_in_sec)
     # deactivate DALL-E 2
-    driver.find_elements(By.CLASS_NAME, 'css-dpjbap')[2].click()
-    time.sleep(preiod_wait_in_sec)
+    driver.find_elements(By.CLASS_NAME, 'MuiFormControlLabel-root')[2].click()
 
 def extract_midjourney_images(driver: WebDriver) -> List[MidjourneyImage]:
     midjourney_images: List[MidjourneyImage] = []
-    gridcells = driver.find_elements(By.CLASS_NAME, 'css-sul2l0')
+    gridcells = driver.find_elements(By.CLASS_NAME, 'MuiCard-root')
 
     # Click on all more to make prompt completly visible
     more_elements = driver.find_elements(By.XPATH, "//span[text()='[more]']")
@@ -64,15 +63,13 @@ def extract_midjourney_images(driver: WebDriver) -> List[MidjourneyImage]:
             continue
 
         try:
-            # TODO: extracted Image url ist not always the correct one
-            gridcell_image = gridcell.find_element(By.CLASS_NAME, "css-1fw0bmn")
             # Scroll to the element using JavaScript
-            driver.execute_script("arguments[0].scrollIntoView();", gridcell_image)
-            time.sleep(0.5)
-            image_url = gridcell_image.find_elements(By.TAG_NAME, 'img')[-1].get_attribute('src')
+            driver.execute_script("arguments[0].scrollIntoView();", gridcell)
+            time.sleep(2)
+            image_url = gridcell.find_elements(By.TAG_NAME, 'img')[-1].get_attribute('src')
             assert any(image_url.endswith(ending) for ending in [".webp", ".jpg", "jpeg", ".png"]) , f"image_url {image_url}, is not in the expected image format"
             # extract prompt from text area
-            prompt = gridcell.find_element(By.CLASS_NAME, "css-18l0n8d").text
+            prompt = gridcell.find_element(By.CLASS_NAME, "MuiTypography-body2").text
             if not check_if_image_exists(midjourney_images, image_url):
                 midjourney_images.append(MidjourneyImage(image_url=image_url, prompt=prompt))
         except Exception as e:
@@ -91,5 +88,6 @@ def crawl_openartai():
     openartai_search_prompts(session_state.crawling_request.search_term, driver)
     time.sleep(1)
     apply_filters(driver)
+    time.sleep(2)
     session_state.crawling_data = CrawlingData(midjourney_images=extract_midjourney_images(driver))
 
