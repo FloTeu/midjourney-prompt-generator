@@ -53,7 +53,10 @@ def discord_login(driver: WebDriver):
     submit_button.click()
 
     time.sleep(3)
-    # TODO: csptca can arrise
+    # TODO: captcha can arrise
+    if "captcha" in driver.page_source.lower():
+        st.error("Captcha Error appeared")
+
     # if not redirect to midjourney happend, we probably need to authorized midjourney to acces the discord account first
     if "discord.com" in driver.current_url:
         authorize_midjourney(driver)
@@ -132,6 +135,6 @@ def crawl_midjourney():
     midjourney_community_feed(driver)
     time.sleep(2)
     midjourney_search_prompts(session_state.crawling_request.search_term, driver)
-    time.sleep(3)
+    time.sleep(4)
     session_state.crawling_data = CrawlingData(midjourney_images=extract_midjourney_images(driver))
 

@@ -48,7 +48,7 @@ def display_midjourney_images(midjourney_images: List[MidjourneyImage], tab, mak
                 display_cols[i].image(image_bytes_io)
                 #color = "black" if not midjourney_image.selected else "green"
                 #display_cols[i].markdown(f":{color}[{(j * MAX_IMAGES_PER_ROW) + i + 1}. {mba_product.title}]")
-                display_cols[i].write(f"{(j * MAX_IMAGES_PER_ROW) + i + 1}. Prompt: {midjourney_image.prompt}")
+                display_cols[i].write(f"{(j * MAX_IMAGES_PER_ROW) + i + 1}: {midjourney_image.prompt}")
 
         crawling_progress_bar.empty()
 
