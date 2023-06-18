@@ -34,7 +34,7 @@ def check_if_image_exists(images: List[MidjourneyImage], image_url: str) -> bool
 
 def apply_filters(driver: WebDriver, preiod_wait_in_sec=1):
     # Open model selection filter field
-    driver.find_element(By.CLASS_NAME, 'css-j3its3').click()
+    driver.find_element(By.CLASS_NAME, 'css-dpjbap').click()
     time.sleep(preiod_wait_in_sec)
     # deactivate Stable Diffusion
     driver.find_elements(By.CLASS_NAME, 'css-dpjbap')[1].click()
