@@ -5,7 +5,8 @@ import requests
 from typing import List
 from io import BytesIO
 from utils.session import update_request, SessionState
-from utils.crawling_fns import crawl_midjourney, login_to_midjourney
+from utils.crawling.midjourney import crawl_midjourney, login_to_midjourney
+from utils.crawling.openart_ai import crawl_openartai
 from utils.data_classes import MidjourneyImage
 from utils import extract_list_items
 from llm_few_shot_gen.prompt.midjourney import MidjourneyPromptGenerator
@@ -123,22 +124,22 @@ def main():
 
     tab_crawling, tab_prompt_gen = st.tabs(["Crawling", "Prompt Generation"])
 
-    st.sidebar.subheader("1. Midjourney Login")
-    st.sidebar.info("*prompt search is only available for authenticated midjourney users")
-    st.sidebar.text_input("Midjourney Email", value=os.environ.get("user_name", ""), key="mid_email")
-    st.sidebar.text_input("Midjourney Password", type="password", value=os.environ.get("password", ""), key="mid_password")
-    st.sidebar.button("Login", on_click=login_to_midjourney, key="button_midjourney_login")
+    # st.sidebar.subheader("1. Midjourney Login")
+    # st.sidebar.info("*prompt search is only available for authenticated midjourney users")
+    # st.sidebar.text_input("Midjourney Email", value=os.environ.get("user_name", ""), key="mid_email")
+    # st.sidebar.text_input("Midjourney Password", type="password", value=os.environ.get("password", ""), key="mid_password")
+    # st.sidebar.button("Login", on_click=login_to_midjourney, key="button_midjourney_login")
 
-    st.sidebar.subheader("2. Midjourney Crawling")
+    st.sidebar.subheader("1. Midjourney Crawling")
     st.sidebar.text_input("Search Term (e.g. art style)", key="search_term", on_change=update_request)
-    if st.sidebar.button("Start Crawling", on_click=crawl_midjourney, key="button_midjourney_crawling"):
+    if st.sidebar.button("Start Crawling", on_click=crawl_openartai, key="button_midjourney_crawling"):
         session_state: SessionState = st.session_state["session_state"]
         display_midjourney_images(session_state.crawling_data.midjourney_images, tab_crawling, make_collapsable=False)
         tab_crawling.info('Please go to "Prompt Generation" tab')
 
     if "session_state" in st.session_state:
         session_state: SessionState = st.session_state["session_state"]
-        st.sidebar.subheader("3. Prompt Generation")
+        st.sidebar.subheader("2. Prompt Generation")
         midjourney_images = session_state.crawling_data.midjourney_images
         selected_prompts = st.sidebar.multiselect("Select Designs for prompt generation:", [i+1 for i in range(len(midjourney_images))], on_change=display_midjourney_images, args=(session_state.crawling_data.midjourney_images,tab_crawling,False,), key='selected_prompts')
         st.sidebar.text_input("Prompt Gen Input", key="prompt_gen_input")
