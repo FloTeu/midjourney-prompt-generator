@@ -2,6 +2,7 @@ import time
 import streamlit as st
 
 from typing import List
+from contextlib import suppress
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.action_chains import ActionChains
@@ -44,18 +45,23 @@ def apply_filters(driver: WebDriver, preiod_wait_in_sec=1):
 
 def extract_midjourney_images(driver: WebDriver) -> List[MidjourneyImage]:
     midjourney_images: List[MidjourneyImage] = []
-    gridcells = driver.find_elements(By.CLASS_NAME, 'MuiCard-root')
 
-    # Click on all more to make prompt completly visible
-    more_elements = driver.find_elements(By.XPATH, "//span[text()='[more]']")
-    for i, more_element in enumerate(more_elements):
-        try:
-            # Scroll to the element using JavaScript
-            driver.execute_script("arguments[0].scrollIntoView();", more_element)
-            more_element.click()
-        except:
-            print(f"more element number {i} is not clickable")
-            continue
+    expand_prompt_text(driver)
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    time.sleep(2)
+    expand_prompt_text(driver)
+    time.sleep(1)
+
+    # bring grid elements in right order to screen scrolling
+    columns = driver.find_elements(By.XPATH, "//*[contains(@style, 'flex-direction: column')]")
+    grid_columns = []
+    for column in columns:
+        grid_columns.append(column.find_elements(By.CLASS_NAME, 'MuiCard-root'))
+    gridcells = []
+    for i in range(len(grid_columns[0])):
+        for grid_column in grid_columns:
+            with suppress(IndexError):
+                gridcells.append(grid_column[i])
 
     for gridcell in gridcells:
         # skip i its not a midjourney image
@@ -65,8 +71,14 @@ def extract_midjourney_images(driver: WebDriver) -> List[MidjourneyImage]:
         try:
             # Scroll to the element using JavaScript
             driver.execute_script("arguments[0].scrollIntoView();", gridcell)
-            time.sleep(2)
-            image_url = gridcell.find_elements(By.TAG_NAME, 'img')[-1].get_attribute('src')
+            # Wait until image tag is loaded
+            # Define the locator for the image element
+            image_locator = (By.CSS_SELECTOR, "img[src$='.webp'], img[src$='.jpg'], img[src$='.jpeg'], img[src$='.png']")
+            # Wait until the image element is visible
+            wait = WebDriverWait(gridcell, 4)
+            image_element = wait.until(EC.visibility_of_element_located(image_locator))
+            # Extract image webp element
+            image_url = image_element.get_attribute('src')
             assert any(image_url.endswith(ending) for ending in [".webp", ".jpg", "jpeg", ".png"]) , f"image_url {image_url}, is not in the expected image format"
             # extract prompt from text area
             prompt = gridcell.find_element(By.CLASS_NAME, "MuiTypography-body2").text
@@ -77,6 +89,19 @@ def extract_midjourney_images(driver: WebDriver) -> List[MidjourneyImage]:
             continue
 
     return midjourney_images
+
+
+def expand_prompt_text(driver):
+    # Click on all more to make prompt completly visible
+    more_elements = driver.find_elements(By.XPATH, "//span[text()='[more]']")
+    for i, more_element in enumerate(more_elements):
+        try:
+            # Scroll to the element using JavaScript
+            driver.execute_script("arguments[0].scrollIntoView();", more_element)
+            more_element.click()
+        except:
+            print(f"more element number {i} is not clickable")
+            continue
 
 
 def crawl_openartai():
