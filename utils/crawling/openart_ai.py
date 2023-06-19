@@ -1,5 +1,6 @@
 import time
 import streamlit as st
+import math
 
 from typing import List
 from contextlib import suppress
@@ -43,7 +44,7 @@ def apply_filters(driver: WebDriver, preiod_wait_in_sec=1):
     # deactivate DALL-E 2
     driver.find_elements(By.CLASS_NAME, 'MuiFormControlLabel-root')[2].click()
 
-def extract_midjourney_images(driver: WebDriver) -> List[MidjourneyImage]:
+def extract_midjourney_images(driver: WebDriver, crawling_progress_bar, progress: int) -> List[MidjourneyImage]:
     midjourney_images: List[MidjourneyImage] = []
 
     expand_prompt_text(driver)
@@ -62,8 +63,8 @@ def extract_midjourney_images(driver: WebDriver) -> List[MidjourneyImage]:
         for grid_column in grid_columns:
             with suppress(IndexError):
                 gridcells.append(grid_column[i])
-
-    for gridcell in gridcells:
+    progress_left = 50 - progress
+    for i, gridcell in enumerate(gridcells):
         # skip i its not a midjourney image
         if len(driver.find_elements(By.XPATH, "//span[text()='Midjourney']")) == 0:
             continue
@@ -72,11 +73,7 @@ def extract_midjourney_images(driver: WebDriver) -> List[MidjourneyImage]:
             # Scroll to the element using JavaScript
             driver.execute_script("arguments[0].scrollIntoView();", gridcell)
             # Wait until image tag is loaded
-            # Define the locator for the image element
-            image_locator = (By.CSS_SELECTOR, "img[src$='.webp'], img[src$='.jpg'], img[src$='.jpeg'], img[src$='.png']")
-            # Wait until the image element is visible
-            wait = WebDriverWait(gridcell, 4)
-            image_element = wait.until(EC.visibility_of_element_located(image_locator))
+            image_element = wait_until_image_loaded(gridcell)
             # Extract image webp element
             image_url = image_element.get_attribute('src')
             assert any(image_url.endswith(ending) for ending in [".webp", ".jpg", "jpeg", ".png"]) , f"image_url {image_url}, is not in the expected image format"
@@ -84,11 +81,22 @@ def extract_midjourney_images(driver: WebDriver) -> List[MidjourneyImage]:
             prompt = gridcell.find_element(By.CLASS_NAME, "MuiTypography-body2").text
             if not check_if_image_exists(midjourney_images, image_url):
                 midjourney_images.append(MidjourneyImage(image_url=image_url, prompt=prompt))
+            crawling_progress_bar.progress(int(progress + (progress_left * (i/len(gridcells)))), text="Crawling Midjourney images" + ": Crawling...")
+
         except Exception as e:
             print("Could not extract image and prompt", str(e))
             continue
 
     return midjourney_images
+
+
+def wait_until_image_loaded(gridcell):
+    # Define the locator for the image element
+    image_locator = (By.CSS_SELECTOR, "img[src$='.webp'], img[src$='.jpg'], img[src$='.jpeg'], img[src$='.png']")
+    # Wait until the image element is visible
+    wait = WebDriverWait(gridcell, 1)
+    image_element = wait.until(EC.visibility_of_element_located(image_locator))
+    return image_element
 
 
 def expand_prompt_text(driver):
@@ -104,15 +112,21 @@ def expand_prompt_text(driver):
             continue
 
 
-def crawl_openartai():
+def crawl_openartai(crawling_tab):
+    progress_text = "Crawling Midjourney images"
+    crawling_progress_bar = crawling_tab.progress(0, text=progress_text)
+    crawling_progress_bar.progress(5,text=progress_text + ": Setup...")
     session_state: SessionState = st.session_state["session_state"]
     driver = session_state.browser.driver
     time.sleep(1)
+    crawling_progress_bar.progress(10,text=progress_text + ": Search...")
     get_openartai_discovery(driver)
-    time.sleep(2)
+    crawling_progress_bar.progress(15,text=progress_text + ": Search...")
     openartai_search_prompts(session_state.crawling_request.search_term, driver)
     time.sleep(1)
+    crawling_progress_bar.progress(20,text=progress_text + ": Apply filters...")
     apply_filters(driver)
-    time.sleep(2)
-    session_state.crawling_data = CrawlingData(midjourney_images=extract_midjourney_images(driver))
+    #time.sleep(2)
+    crawling_progress_bar.progress(25,text=progress_text + ": Crawling...")
+    session_state.crawling_data = CrawlingData(midjourney_images=extract_midjourney_images(driver, crawling_progress_bar, 25))
 

@@ -43,10 +43,11 @@ def display_midjourney_images(midjourney_images: List[MidjourneyImage], tab, mak
         display_cols = display_images.columns(MAX_IMAGES_PER_ROW)
         for j, midjourney_images_splitted_list in enumerate(split_list(midjourney_images, MAX_IMAGES_PER_ROW)):
             for i, midjourney_image in enumerate(midjourney_images_splitted_list):
-                crawling_progress_bar.progress(math.ceil(100 / len(midjourney_images) * ((j * MAX_IMAGES_PER_ROW) + i)) + 1,
+                crawling_progress_bar.progress(math.ceil(49 + (50 / len(midjourney_images) * ((j * MAX_IMAGES_PER_ROW) + i)) + 1),
                                                text=progress_text)
-                image_bytes_io: BytesIO = image_url2image_bytes_io(midjourney_image.image_url)
-                display_cols[i].image(image_bytes_io)
+                #image_bytes_io: BytesIO = image_url2image_bytes_io(midjourney_image.image_url)
+                #display_cols[i].image(image_bytes_io)
+                display_cols[i].image(midjourney_image.image_url)
                 #color = "black" if not midjourney_image.selected else "green"
                 #display_cols[i].markdown(f":{color}[{(j * MAX_IMAGES_PER_ROW) + i + 1}. {mba_product.title}]")
                 display_cols[i].write(f"{(j * MAX_IMAGES_PER_ROW) + i + 1}: {midjourney_image.prompt}")
@@ -107,7 +108,7 @@ def generate_midjourney_prompts(prompts) -> ImagePromptOutputModel:
 
 def main():
 
-    st.title("Midjourney Few Shot Prompt Generator")
+    st.title("Midjourney Prompt Generator")
     st.caption('“If you can imagine it, you can generate it” - Runway Gen-2 commercial')
 
     st.write("Streamlit application for a showcase of the [LLM Few Shot Generator Library](https://github.com/FloTeu/llm-few-shot-generator). \n"
@@ -132,7 +133,7 @@ def main():
 
     st.sidebar.subheader("1. Midjourney Crawling")
     st.sidebar.text_input("Search Term (e.g. art style)", key="search_term", on_change=update_request)
-    if st.sidebar.button("Start Crawling", on_click=crawl_openartai, key="button_midjourney_crawling"):
+    if st.sidebar.button("Start Crawling", on_click=crawl_openartai, args=(tab_crawling, ), key="button_midjourney_crawling"):
         session_state: SessionState = st.session_state["session_state"]
         display_midjourney_images(session_state.crawling_data.midjourney_images, tab_crawling, make_collapsable=False)
         tab_crawling.info('Please go to "Prompt Generation" tab')
