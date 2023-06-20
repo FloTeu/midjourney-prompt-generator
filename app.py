@@ -37,13 +37,13 @@ def display_midjourney_images(midjourney_images: List[MidjourneyImage], tab, mak
 
     with tab:
         expander = st.expander("Collapse Midjourney images", expanded=True) if make_collapsable else st
-        progress_text = "Crawling in progress. Please wait."
-        crawling_progress_bar = expander.progress(0, text=progress_text)
+        progress_text = "Display crawling results..."
+        crawling_progress_bar = expander.progress(89, text=progress_text)
         display_images = expander.empty()
         display_cols = display_images.columns(MAX_IMAGES_PER_ROW)
         for j, midjourney_images_splitted_list in enumerate(split_list(midjourney_images, MAX_IMAGES_PER_ROW)):
             for i, midjourney_image in enumerate(midjourney_images_splitted_list):
-                crawling_progress_bar.progress(math.ceil(49 + (50 / len(midjourney_images) * ((j * MAX_IMAGES_PER_ROW) + i)) + 1),
+                crawling_progress_bar.progress(math.ceil(89 + (10 / len(midjourney_images) * ((j * MAX_IMAGES_PER_ROW) + i)) + 1),
                                                text=progress_text)
                 #image_bytes_io: BytesIO = image_url2image_bytes_io(midjourney_image.image_url)
                 #display_cols[i].image(image_bytes_io)
