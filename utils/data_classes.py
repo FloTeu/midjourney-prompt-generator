@@ -1,6 +1,11 @@
 from utils.selenium_fns import SeleniumBrowser
 from dataclasses import dataclass, field
 from typing import List, Optional
+from enum import Enum
+
+class CrawlingTargetPage(str, Enum):
+    MIDJOURNEY = "midjourney.com"
+    OPENART = "openart.ai"
 
 @dataclass
 class MidjourneyImage:

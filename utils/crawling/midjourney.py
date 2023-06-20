@@ -128,7 +128,7 @@ def extract_midjourney_images(driver: WebDriver) -> List[MidjourneyImage]:
     return midjourney_images
 
 
-def crawl_midjourney():
+def crawl_midjourney(tab_crawling):
     session_state: SessionState = st.session_state["session_state"]
     driver = session_state.browser.driver
     time.sleep(1)
