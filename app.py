@@ -72,7 +72,7 @@ def display_prompt_generation_tab(midjourney_images, selected_prompts, tab_promp
     #print("llm_output", llm_output)
     tab_prompt_gen.write(llm_output.image_prompts)
     tab_prompt_gen.subheader("Detected Art Styles")
-    tab_prompt_gen.write(llm_output.few_shot_art_styles)
+    tab_prompt_gen.write(llm_output.few_shot_styles_artists)
 
     # Display selected images/prompts
     tab_prompt_gen.subheader("Selected Midjourney Images")
