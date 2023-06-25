@@ -65,10 +65,11 @@ def extract_midjourney_images(driver: WebDriver, crawling_progress_bar, progress
     for column in columns:
         grid_columns.append(column.find_elements(By.CLASS_NAME, 'MuiCard-root'))
     gridcells = []
-    for i in range(len(grid_columns[0])):
-        for grid_column in grid_columns:
-            with suppress(IndexError):
-                gridcells.append(grid_column[i])
+    if len(grid_columns) > 0:
+        for i in range(len(grid_columns[0])):
+            for grid_column in grid_columns:
+                with suppress(IndexError):
+                    gridcells.append(grid_column[i])
     progress_left = progress_max - progress
     for i, gridcell in enumerate(gridcells):
         # skip if its not a midjourney image

@@ -8,9 +8,8 @@ from utils.session import update_request, SessionState
 from utils.crawling.midjourney import crawl_midjourney, login_to_midjourney
 from utils.crawling.openart_ai import crawl_openartai, crawl_openartai_similar_images
 from utils.data_classes import MidjourneyImage, CrawlingTargetPage
-from utils import extract_list_items
-from llm_few_shot_gen.prompt.midjourney import MidjourneyPromptGenerator
-from llm_few_shot_gen.prompt.data_classes import ImagePromptOutputModel
+from llm_few_shot_gen.generators import MidjourneyPromptGenerator
+from llm_few_shot_gen.models.output import ImagePromptOutputModel
 from langchain.chat_models.openai import ChatOpenAI
 
 os.environ["OPENAI_API_KEY"] = st.secrets["open_ai_api_key"]
@@ -127,7 +126,7 @@ def main():
     # Crawl similar images
     if target_page == CrawlingTargetPage.OPENART and "session_state" in st.session_state and len(st.session_state["session_state"].crawling_data.midjourney_images) > 0:
         session_state: SessionState = st.session_state["session_state"]
-        deep_crawl_image_nr = st.sidebar.selectbox("Crawl Similar Images",
+        deep_crawl_image_nr = st.sidebar.selectbox("(optional) Crawl Similar Images",
                                           [i + 1 for i in range(len(session_state.crawling_data.midjourney_images))], on_change=display_midjourney_images, args=(session_state.crawling_data.midjourney_images, tab_crawling, False, ))
         if st.sidebar.button("Start Similar Image Crawling", on_click=crawl_openartai_similar_images, args=(tab_crawling, deep_crawl_image_nr - 1, ), key="button_midjourney_crawling_similar_images"):
             display_midjourney_images(session_state.crawling_data.midjourney_images, tab_crawling,
