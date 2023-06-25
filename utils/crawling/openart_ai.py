@@ -1,4 +1,5 @@
 import time
+import logging
 import streamlit as st
 import math
 
@@ -46,7 +47,11 @@ def apply_filters(driver: WebDriver, preiod_wait_in_sec=1):
 
 def extract_midjourney_images(driver: WebDriver, crawling_progress_bar, progress: int, progress_max=90) -> List[MidjourneyImage]:
     midjourney_images: List[MidjourneyImage] = []
-
+    try:
+        # if we have a presentation view, driver should include only images for this view
+        driver_view = driver.find_elements(By.XPATH, "//div[@role='presentation']")[-1]
+    except:
+        driver_view = driver
     expand_prompt_text(driver)
     # scroll to botton
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -54,7 +59,8 @@ def extract_midjourney_images(driver: WebDriver, crawling_progress_bar, progress
     expand_prompt_text(driver)
 
     # bring grid elements in right order to screen scrolling
-    columns = driver.find_elements(By.XPATH, "//*[contains(@style, 'flex-direction: column')]")
+    columns = driver_view.find_elements(By.XPATH, ".//*[contains(@style, 'flex-direction: column')]")
+
     grid_columns = []
     for column in columns:
         grid_columns.append(column.find_elements(By.CLASS_NAME, 'MuiCard-root'))
@@ -108,12 +114,36 @@ def expand_prompt_text(driver):
     for i, more_element in enumerate(more_elements):
         try:
             # Scroll to the element using JavaScript
-            driver.execute_script("arguments[0].scrollIntoView();", more_element)
-            more_element.click()
-        except:
+            #driver.execute_script("arguments[0].scrollIntoView();", more_element)
+            #more_element.click()
+            driver.execute_script("arguments[0].click();", more_element)
+        except Exception as e:
             print(f"more element number {i} is not clickable")
             continue
 
+def click_image(driver, prompt):
+    # cut prompt to handle ' char
+    prompt = prompt[:prompt.find("'")]
+    #prompt_web_elements = driver.find_elements(By.XPATH, f"//span[text()='{prompt}']")
+    prompt_web_elements = driver.find_elements(By.XPATH, f"//*[contains(text(), '{prompt}')]")
+    if len(prompt_web_elements) == 0:
+        st.error("Could not find element. Please try another one.")
+        return None
+    prompt_web_element = prompt_web_elements[0]
+    gridcell = prompt_web_element.find_elements(By.XPATH, "./ancestor::div[contains(@class, 'MuiPaper-root')]")[-1]
+
+    # Scroll to the element using JavaScript
+    driver.execute_script("arguments[0].scrollIntoView();", gridcell)
+    # Wait until image tag is loaded
+    try:
+        image_element = wait_until_image_loaded(gridcell)
+    except Exception as e:
+        logging.warning(e)
+        image_element = gridcell.find_element(By.CSS_SELECTOR, "img[src$='.webp'], img[src$='.jpg'], img[src$='.jpeg'], img[src$='.png']")
+
+    # click image
+    driver.execute_script("arguments[0].click();", image_element)
+    #image_element.click()
 
 def crawl_openartai(crawling_tab):
     set_session_state_if_not_exists()
@@ -134,4 +164,22 @@ def crawl_openartai(crawling_tab):
     crawling_progress_bar.progress(50,text=progress_text + ": Crawling...")
     session_state.crawling_data = CrawlingData(midjourney_images=extract_midjourney_images(driver, crawling_progress_bar, 50))
     crawling_progress_bar.empty()
+
+def crawl_openartai_similar_images(crawling_tab, image_nr):
+    progress_text = "Crawling Midjourney images"
+    crawling_progress_bar = crawling_tab.progress(0, text=progress_text)
+    # Get session data
+    session_state: SessionState = st.session_state["session_state"]
+    driver = session_state.browser.driver
+    midjourney_image: MidjourneyImage = session_state.crawling_data.midjourney_images[image_nr]
+
+    # Click on selected image
+    click_image(driver, midjourney_image.prompt)
+    time.sleep(1)
+    crawling_progress_bar.progress(30,text=progress_text + ": Crawling...")
+
+    # Crawl similar images
+    session_state.crawling_data = CrawlingData(midjourney_images=extract_midjourney_images(driver, crawling_progress_bar, 30))
+    crawling_progress_bar.empty()
+
 

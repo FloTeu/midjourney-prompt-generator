@@ -6,7 +6,7 @@ from typing import List
 from io import BytesIO
 from utils.session import update_request, SessionState
 from utils.crawling.midjourney import crawl_midjourney, login_to_midjourney
-from utils.crawling.openart_ai import crawl_openartai
+from utils.crawling.openart_ai import crawl_openartai, crawl_openartai_similar_images
 from utils.data_classes import MidjourneyImage, CrawlingTargetPage
 from utils import extract_list_items
 from llm_few_shot_gen.prompt.midjourney import MidjourneyPromptGenerator
@@ -72,7 +72,9 @@ def display_prompt_generation_tab(midjourney_images, selected_prompts, tab_promp
     #print("llm_output", llm_output)
     tab_prompt_gen.write(llm_output.image_prompts)
     tab_prompt_gen.subheader("Detected Art Styles")
-    tab_prompt_gen.write(llm_output.few_shot_styles_artists)
+    tab_prompt_gen.write(llm_output.few_shot_styles)
+    tab_prompt_gen.subheader("Detected Artists")
+    tab_prompt_gen.write(llm_output.few_shot_artists)
 
     # Display selected images/prompts
     tab_prompt_gen.subheader("Selected Midjourney Images")
@@ -81,26 +83,8 @@ def display_prompt_generation_tab(midjourney_images, selected_prompts, tab_promp
     display_midjourney_images(selected_midjourney_images, tab_prompt_gen, make_collapsable=True)
 
 def generate_midjourney_prompts(prompts) -> ImagePromptOutputModel:
-    temperature = 0.7
-    llm = ChatOpenAI(temperature=temperature, model_name="gpt-3.5-turbo")
-    midjourney_prompt_gen = MidjourneyPromptGenerator(llm)
-    #
-    # # Edit human call to action message in order to produce multiple prompts and not just one
-    # human_template = """
-    #                     I want you to act as a professional image ai user.
-    #                     Write five concise english prompts enumerated starting with 1. without quotation marks for the text delimited by ```.
-    #                     Use the same patterns from the example prompts and if possible try to include the same art style.
-    #                     Your output should only contain the suggested prompts without further details.
-    #                     ```{text}```
-    #                  """
-    # human_template = """
-    #                 Complete the following tasks in the right order:
-    #                 1. Try to extract the applied art style of the example prompts that the instructor provided you before.
-    #                 2. Write five concise english prompts with the content "{text}" enumerated starting with 1. without quotation marks. Your suggestions should include your found styles of step 1 and use the same patterns as the example prompts.
-    #
-    #                 Only output your result of the five prompts of the second step without any more details. Do not write anything about your results of step 1.
-    #              """
-    # midjourney_prompt_gen.messages.human_message = HumanMessagePromptTemplate.from_template(human_template)
+    llm = ChatOpenAI(temperature=st.session_state["temperature"], model_name="gpt-3.5-turbo")
+    midjourney_prompt_gen = MidjourneyPromptGenerator(llm, pydantic_cls=ImagePromptOutputModel)
     midjourney_prompt_gen.set_few_shot_examples(prompts)
     llm_output = midjourney_prompt_gen.generate(text=st.session_state["prompt_gen_input"])
     return llm_output
@@ -128,7 +112,6 @@ def main():
     st.sidebar.subheader("1. Crawling Target Page")
     target_page: CrawlingTargetPage = st.sidebar.selectbox("Crawling target page", options=["openart.ai", "midjourney.com"])
     if target_page == CrawlingTargetPage.MIDJOURNEY:
-        #st.sidebar.subheader("2. Midjourney Login")
         st.sidebar.info("*prompt search is only available for authenticated midjourney users")
         st.sidebar.text_input("Midjourney Email", value=os.environ.get("user_name", ""), key="mid_email")
         st.sidebar.text_input("Midjourney Password", type="password", value=os.environ.get("password", ""), key="mid_password")
@@ -141,10 +124,20 @@ def main():
         display_midjourney_images(session_state.crawling_data.midjourney_images, tab_crawling, make_collapsable=False)
         tab_crawling.info('Please go to "Prompt Generation" tab')
 
+    # Crawl similar images
+    if target_page == CrawlingTargetPage.OPENART and "session_state" in st.session_state and len(st.session_state["session_state"].crawling_data.midjourney_images) > 0:
+        session_state: SessionState = st.session_state["session_state"]
+        deep_crawl_image_nr = st.sidebar.selectbox("Crawl Similar Images",
+                                          [i + 1 for i in range(len(session_state.crawling_data.midjourney_images))], on_change=display_midjourney_images, args=(session_state.crawling_data.midjourney_images, tab_crawling, False, ))
+        if st.sidebar.button("Start Similar Image Crawling", on_click=crawl_openartai_similar_images, args=(tab_crawling, deep_crawl_image_nr - 1, ), key="button_midjourney_crawling_similar_images"):
+            display_midjourney_images(session_state.crawling_data.midjourney_images, tab_crawling,
+                                      make_collapsable=False)
+
     if "session_state" in st.session_state:
         session_state: SessionState = st.session_state["session_state"]
         st.sidebar.subheader("3. Prompt Generation")
         midjourney_images = session_state.crawling_data.midjourney_images
+        st.sidebar.number_input("LLM Temperature", value=0.7, max_value=1.0, min_value=0.0, key="temperature")
         selected_prompts = st.sidebar.multiselect("Select Designs for prompt generation:", [i+1 for i in range(len(midjourney_images))], on_change=display_midjourney_images, args=(session_state.crawling_data.midjourney_images,tab_crawling,False,), key='selected_prompts')
         st.sidebar.text_input("Prompt Gen Input", key="prompt_gen_input")
         st.sidebar.button("Prompt Generation", on_click=display_prompt_generation_tab, args=(midjourney_images, selected_prompts, tab_prompt_gen, tab_crawling, ), key="button_prompt_generation")
