@@ -21,7 +21,7 @@ def get_openartai_discovery(driver: WebDriver):
     driver.get("https://openart.ai/discovery")
 
 def openartai_search_prompts(search_term: str, driver: WebDriver):
-    search_input = driver.find_element(By.CSS_SELECTOR, 'input[id=":Rpklammdalm:"]')
+    search_input = driver.find_element(By.CSS_SELECTOR, 'input[id=":R36ilaqplal6:"]')
     # Click on input field
     search_input.click()
     # Put text in input
@@ -73,8 +73,8 @@ def extract_midjourney_images(driver: WebDriver, crawling_progress_bar, progress
     progress_left = progress_max - progress
     for i, gridcell in enumerate(gridcells):
         # skip if its not a midjourney image
-        if len(gridcell.find_elements(By.XPATH, "//span[text()='Midjourney']")) == 0:
-            continue
+        # if len(gridcell.find_elements(By.XPATH, "//span[text()='Midjourney']")) == 0:
+        #     continue
 
         try:
             # Scroll to the element using JavaScript
@@ -160,7 +160,7 @@ def crawl_openartai(crawling_tab):
     openartai_search_prompts(session_state.crawling_request.search_term, driver)
     time.sleep(1)
     crawling_progress_bar.progress(40,text=progress_text + ": Apply filters...")
-    apply_filters(driver)
+    #apply_filters(driver)
     time.sleep(2)
     crawling_progress_bar.progress(50,text=progress_text + ": Crawling...")
     session_state.crawling_data = CrawlingData(midjourney_images=extract_midjourney_images(driver, crawling_progress_bar, 50))
