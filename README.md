@@ -1,3 +1,7 @@
+
+> [!WARNING]  
+> Old repository. Check out https://github.com/FloTeu/few-shot-image-gen-app for the latest version
+
 # midjourney-prompt-generator
 [Streamlit application](https://midjourney-prompt-generator.streamlit.app/) for a midjourney prompt generator demo. 
 
