@@ -90,57 +90,57 @@ def generate_midjourney_prompts(prompts) -> ImagePromptOutputModel:
 
 
 def main():
-
-    st.title("Midjourney Prompt Generator")
-    st.caption('“If you can imagine it, you can generate it” - Runway Gen-2 commercial')
-
-    st.write("Streamlit application for a showcase of the [LLM Few Shot Generator Library](https://github.com/FloTeu/llm-few-shot-generator). \n"
-             "The app allows you to extract sample prompts from the Midjourney website. A subsample of these prompts can then be used to generate new prompts for ChatGPT using a [few-shot learning](https://www.promptingguide.ai/techniques/fewshot) approach.")
-    st.write("[Source code frontend](https://github.com/FloTeu/midjourney-prompt-generator)")
-    st.write("[Source code backend](https://github.com/FloTeu/llm-few-shot-generator)")
-
-    with st.expander("Example"):
-        st.write("""
-            Text Prompt Input: "Grandma" \n
-            Midjourney Prompt Generator output images:
-        """)
-        st.image("assets/grandmas.jpg")
-
-    tab_crawling, tab_prompt_gen = st.tabs(["Crawling", "Prompt Generation"])
-
-    st.sidebar.subheader("1. Crawling Target Page")
-    target_page: CrawlingTargetPage = st.sidebar.selectbox("Crawling target page", options=["openart.ai", "midjourney.com"])
-    if target_page == CrawlingTargetPage.MIDJOURNEY:
-        st.sidebar.info("*prompt search is only available for authenticated midjourney users")
-        st.sidebar.text_input("Midjourney Email", value=os.environ.get("user_name", ""), key="mid_email")
-        st.sidebar.text_input("Midjourney Password", type="password", value=os.environ.get("password", ""), key="mid_password")
-        st.sidebar.button("Login", on_click=login_to_midjourney, key="button_midjourney_login")
-
-    st.sidebar.subheader("2. Midjourney Crawling")
-    st.sidebar.text_input("Search Term (e.g. art style)", key="search_term", on_change=update_request)
-    if st.sidebar.button("Start Crawling", on_click=crawl_openartai if target_page == CrawlingTargetPage.OPENART else crawl_midjourney, args=(tab_crawling, ), key="button_midjourney_crawling"):
-        session_state: SessionState = st.session_state["session_state"]
-        display_midjourney_images(session_state.crawling_data.midjourney_images, tab_crawling, make_collapsable=False)
-        tab_crawling.info('Please go to "Prompt Generation" tab')
-
-    # Crawl similar images
-    if target_page == CrawlingTargetPage.OPENART and "session_state" in st.session_state and len(st.session_state["session_state"].crawling_data.midjourney_images) > 0:
-        session_state: SessionState = st.session_state["session_state"]
-        deep_crawl_image_nr = st.sidebar.selectbox("(optional) Crawl Similar Images",
-                                          [i + 1 for i in range(len(session_state.crawling_data.midjourney_images))], on_change=display_midjourney_images, args=(session_state.crawling_data.midjourney_images, tab_crawling, False, ))
-        if st.sidebar.button("Start Similar Image Crawling", on_click=crawl_openartai_similar_images, args=(tab_crawling, deep_crawl_image_nr - 1, ), key="button_midjourney_crawling_similar_images"):
-            display_midjourney_images(session_state.crawling_data.midjourney_images, tab_crawling,
-                                      make_collapsable=False)
-
-    if "session_state" in st.session_state:
-        session_state: SessionState = st.session_state["session_state"]
-        st.sidebar.subheader("3. Prompt Generation")
-        midjourney_images = session_state.crawling_data.midjourney_images
-        st.sidebar.number_input("LLM Temperature", value=0.7, max_value=1.0, min_value=0.0, key="temperature")
-        selected_prompts = st.sidebar.multiselect("Select Designs for prompt generation:", [i+1 for i in range(len(midjourney_images))], on_change=display_midjourney_images, args=(session_state.crawling_data.midjourney_images,tab_crawling,False,), key='selected_prompts')
-        st.sidebar.text_input("Prompt Gen Input", key="prompt_gen_input")
-        st.sidebar.button("Prompt Generation", on_click=display_prompt_generation_tab, args=(midjourney_images, selected_prompts, tab_prompt_gen, tab_crawling, ), key="button_prompt_generation")
-
+    st.warning("This App is not up to date anymore. Please check out the new version: https://image-gen-ai-app.streamlit.app/")
+    # st.title("Midjourney Prompt Generator")
+    # st.caption('“If you can imagine it, you can generate it” - Runway Gen-2 commercial')
+    #
+    # st.write("Streamlit application for a showcase of the [LLM Few Shot Generator Library](https://github.com/FloTeu/llm-few-shot-generator). \n"
+    #          "The app allows you to extract sample prompts from the Midjourney website. A subsample of these prompts can then be used to generate new prompts for ChatGPT using a [few-shot learning](https://www.promptingguide.ai/techniques/fewshot) approach.")
+    # st.write("[Source code frontend](https://github.com/FloTeu/midjourney-prompt-generator)")
+    # st.write("[Source code backend](https://github.com/FloTeu/llm-few-shot-generator)")
+    #
+    # with st.expander("Example"):
+    #     st.write("""
+    #         Text Prompt Input: "Grandma" \n
+    #         Midjourney Prompt Generator output images:
+    #     """)
+    #     st.image("assets/grandmas.jpg")
+    #
+    # tab_crawling, tab_prompt_gen = st.tabs(["Crawling", "Prompt Generation"])
+    #
+    # st.sidebar.subheader("1. Crawling Target Page")
+    # target_page: CrawlingTargetPage = st.sidebar.selectbox("Crawling target page", options=["openart.ai", "midjourney.com"])
+    # if target_page == CrawlingTargetPage.MIDJOURNEY:
+    #     st.sidebar.info("*prompt search is only available for authenticated midjourney users")
+    #     st.sidebar.text_input("Midjourney Email", value=os.environ.get("user_name", ""), key="mid_email")
+    #     st.sidebar.text_input("Midjourney Password", type="password", value=os.environ.get("password", ""), key="mid_password")
+    #     st.sidebar.button("Login", on_click=login_to_midjourney, key="button_midjourney_login")
+    #
+    # st.sidebar.subheader("2. Midjourney Crawling")
+    # st.sidebar.text_input("Search Term (e.g. art style)", key="search_term", on_change=update_request)
+    # if st.sidebar.button("Start Crawling", on_click=crawl_openartai if target_page == CrawlingTargetPage.OPENART else crawl_midjourney, args=(tab_crawling, ), key="button_midjourney_crawling"):
+    #     session_state: SessionState = st.session_state["session_state"]
+    #     display_midjourney_images(session_state.crawling_data.midjourney_images, tab_crawling, make_collapsable=False)
+    #     tab_crawling.info('Please go to "Prompt Generation" tab')
+    #
+    # # Crawl similar images
+    # if target_page == CrawlingTargetPage.OPENART and "session_state" in st.session_state and len(st.session_state["session_state"].crawling_data.midjourney_images) > 0:
+    #     session_state: SessionState = st.session_state["session_state"]
+    #     deep_crawl_image_nr = st.sidebar.selectbox("(optional) Crawl Similar Images",
+    #                                       [i + 1 for i in range(len(session_state.crawling_data.midjourney_images))], on_change=display_midjourney_images, args=(session_state.crawling_data.midjourney_images, tab_crawling, False, ))
+    #     if st.sidebar.button("Start Similar Image Crawling", on_click=crawl_openartai_similar_images, args=(tab_crawling, deep_crawl_image_nr - 1, ), key="button_midjourney_crawling_similar_images"):
+    #         display_midjourney_images(session_state.crawling_data.midjourney_images, tab_crawling,
+    #                                   make_collapsable=False)
+    #
+    # if "session_state" in st.session_state:
+    #     session_state: SessionState = st.session_state["session_state"]
+    #     st.sidebar.subheader("3. Prompt Generation")
+    #     midjourney_images = session_state.crawling_data.midjourney_images
+    #     st.sidebar.number_input("LLM Temperature", value=0.7, max_value=1.0, min_value=0.0, key="temperature")
+    #     selected_prompts = st.sidebar.multiselect("Select Designs for prompt generation:", [i+1 for i in range(len(midjourney_images))], on_change=display_midjourney_images, args=(session_state.crawling_data.midjourney_images,tab_crawling,False,), key='selected_prompts')
+    #     st.sidebar.text_input("Prompt Gen Input", key="prompt_gen_input")
+    #     st.sidebar.button("Prompt Generation", on_click=display_prompt_generation_tab, args=(midjourney_images, selected_prompts, tab_prompt_gen, tab_crawling, ), key="button_prompt_generation")
+    #
 
 
 
